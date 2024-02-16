@@ -19,17 +19,22 @@ class AsyncHandler(FileSystemEventHandler):
     async def handle_event(self, event): 
         await self.on_event(event)
 
-def start_observer(loop, path_to_watch, on_event):
-    event_handler = AsyncHandler(loop=loop, on_event=on_event)
-    observer = Observer()
-    observer.schedule(event_handler, path_to_watch, recursive=True)
-    observer.start()
+def start_observer(loop, paths_to_watch, on_event):
+    observers = []
+    for path in paths_to_watch:
+        event_handler = AsyncHandler(loop=loop, on_event=on_event)
+        observer = Observer()
+        observer.schedule(event_handler, path, recursive=True)
+        observer.start()
+        observers.append(observer)
+    
     try:
         while True:
             time.sleep(1)
     finally:
-        observer.stop()
-        observer.join()
+        for observer in observers:
+            observer.stop()
+            observer.join()
 
 async def go(path_to_watch, on_event):
     loop = asyncio.get_running_loop()

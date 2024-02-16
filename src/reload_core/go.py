@@ -4,6 +4,9 @@ import os
 import json
 from reload_core.datastore import DataStore, EditorDataStore
 from reload_core.config import *
+import reload_core.network as network
+
+
 
 def go(onUpdate, dataStoreClass: DataStore):
     # Initialize Pygame
@@ -45,9 +48,25 @@ def go(onUpdate, dataStoreClass: DataStore):
     # Set up the clock
     clock = pygame.time.Clock()
     
+    dev_socket = None
+    if DEV_MODE:
+        dev_socket = network.start_dev_server()
+    
+    def resume_game():
+        editor.paused = False
+        print("Resuming game")
+
+    cmds = {
+        "go": resume_game,
+    }
+    
     # Game loop
     while True:
         
+        # If we're in dev mode, check for messages from the dev socket
+        if DEV_MODE and dev_socket:
+            network.update_socket(dev_socket, cmds)
+            
         # Set cursor status
         if datastore.config.show_cursor:
             pygame.mouse.set_visible(True)

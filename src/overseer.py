@@ -21,12 +21,16 @@ async def start_game():
     
     new_game = await asyncio.create_subprocess_exec(
         sys.executable, '-u', 'src/game.py',
+        stdin=subprocess.PIPE,  # Pass the stdin file descriptor
         stdout=stdout_fd,  # Use the file descriptor
         stderr=stderr_fd)  # Use the file descriptor
     
     # It's important to close the duplicated file descriptors to avoid leaks
     os.close(stdout_fd)
     os.close(stderr_fd)
+    
+    # Send a message to the game
+    new_game.stdin.write(b'Hello, game!\n')
 
     return new_game
 
@@ -39,7 +43,7 @@ async def on_file_changed(event):
  
 async def main():
     global game, respawn_requested
-    await editor.filewatcher.go('src', on_file_changed)
+    await editor.filewatcher.go(['src', 'assets'], on_file_changed)
     
     # Wait for the game to finish
     while True: 

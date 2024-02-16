@@ -10,21 +10,31 @@ game = None
 respawn_requested = False
 
 async def start_game():
-    new_game = await asyncio.create_subprocess_exec(
-        sys.executable, 'src/game.py',
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
+    # Open files for writing stdout and stderr and get their file descriptors
+    with open('game_stdout.log', 'wb') as stdout_file, open('game_stderr.log', 'wb') as stderr_file:
+        stdout_fd = stdout_file.fileno()
+        stderr_fd = stderr_file.fileno()
+        
+        # Duplicate the file descriptors to keep them open
+        stdout_fd = os.dup(stdout_fd)
+        stderr_fd = os.dup(stderr_fd)
     
+    new_game = await asyncio.create_subprocess_exec(
+        sys.executable, '-u', 'src/game.py',
+        stdout=stdout_fd,  # Use the file descriptor
+        stderr=stderr_fd)  # Use the file descriptor
+    
+    # It's important to close the duplicated file descriptors to avoid leaks
+    os.close(stdout_fd)
+    os.close(stderr_fd)
+
     return new_game
 
 # Make a filewatcher for the src directory
 # This will run the game.py file when any file in the src directory changes
 async def on_file_changed(event):
     global game, respawn_requested
-    
     respawn_requested = True
-    
-    print(f'File changed: {event.src_path}')
 
  
 async def main():
@@ -34,9 +44,9 @@ async def main():
     # Wait for the game to finish
     while True: 
         await asyncio.sleep(1)
+        # has_returned = game is not None and game.returncode is not None
         
-        has_returned = game is not None and game.returncode is not None
-        if respawn_requested or game is None or has_returned:
+        if respawn_requested or game is None:
             respawn_requested = False 
             
             try:

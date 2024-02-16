@@ -1,0 +1,8 @@
+import os
+
+ARTIFACTS_DIR = "artifacts"
+DATASTORE_DIR = os.path.join(ARTIFACTS_DIR, 'frames')
+FRAMES_PER_SAVE = 1
+FRAME_HISTORY_LIMIT = 100
+
+FPS=60

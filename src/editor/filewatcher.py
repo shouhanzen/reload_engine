@@ -12,6 +12,14 @@ class AsyncHandler(FileSystemEventHandler):
     def on_any_event(self, event):
         if event.is_directory:
             return None
+        
+        # Ignore pycache
+        if event.src_path.find('__pycache__') != -1:
+            return None
+        
+        # Write event to file
+        with open('event.log', 'a') as f:
+            f.write(f'{event.event_type} - {event.src_path}\n')
 
         if event.event_type in ('created', 'modified', 'deleted'):
             asyncio.run_coroutine_threadsafe(self.handle_event(event), self.loop)

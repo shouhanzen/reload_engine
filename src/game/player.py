@@ -8,9 +8,13 @@ import sys
 from reload_core.config import *
 from .bullet import Bullet
 from .constants import GAME_OVER
+from .physics import Circle2D, Edge2D, Box2D
 
 class Player(GameObject):
     pos: Vector2
+    old_pos: Vector2
+    velo: Vector2 = Vector2(x=0, y=0)
+    
     width: int
     height: int
     hp: int = 100
@@ -18,15 +22,11 @@ class Player(GameObject):
     
     alive: bool = True
     
-    def move_ip(self, x, y):
-        self.pos.x += x
-        self.pos.y += y
-    
     def draw(self, screen: pygame.Surface, color: tuple):
         if not self.alive:
             return
         
-        pygame.draw.circle(screen, color, (self.pos.x, self.pos.y), 25)
+        # pygame.draw.circle(screen, color, (self.pos.x, self.pos.y), 25)
         
         # Draw image assets/smiley.png
         image = pygame.image.load('assets/smiley.png')
@@ -36,24 +36,33 @@ class Player(GameObject):
         hp_bar_fill = pygame.Rect(self.pos.x - 25, self.pos.y - 40, 50 * (self.hp / self.max_hp), 5)
         pygame.draw.rect(screen, (255, 0, 0), hp_bar_fill)
     
-    def update(self, ds: DataStore):
+    def update(self, ds: DataStore, screen: pygame.Surface, tmap_store):
         if self.hp <= 0:
             self.kill(ds)
         
         if not self.alive:
             return
         
+        self.old_pos.assign(self.pos)
+        
         # Move the square
         keys = pygame.key.get_pressed()
+        dir = Vector2(x=0, y=0)
         if keys[pygame.K_LEFT]:
-            self.move_ip(-5, 0)
+            dir.x -= 1
         if keys[pygame.K_RIGHT]:
-            self.move_ip(5, 0)
+            dir.x += 1
         if keys[pygame.K_UP]:
-            self.move_ip(0, -5)
+            dir.y -= 1
         if keys[pygame.K_DOWN]:
-            self.move_ip(0, 5)
-            
+            dir.y += 1
+        
+        dir = dir.normalize()
+        self.velo = dir * 5
+        projected_pos = self.pos + self.velo
+        
+        self.pos.assign(projected_pos)
+        
         # Create bullet on click
         if pygame.mouse.get_pressed()[0]:
             

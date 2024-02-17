@@ -1,3 +1,5 @@
 pygame
 pydantic
 watchdog
+pytmx
+numpy

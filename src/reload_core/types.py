@@ -30,3 +30,10 @@ class Vector2(BaseModel):
             return Vector2(x=0, y=0)
         else:
             return Vector2(x=x/magnitude, y=y/magnitude)
+    
+    def assign(self, other):
+        self.x = other.x
+        self.y = other.y
+    
+    def dot(self, other):
+        return self.x*other.x + self.y*other.y

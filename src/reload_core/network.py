@@ -47,7 +47,7 @@ def update_socket(server_socket, cmds):
                     # Execute command
                     cmd = data.decode().strip().lower()
                     if cmd in cmds:
-                        cmds[cmd]()
+                        cmds[cmd](s)
                     
                     
                 else:

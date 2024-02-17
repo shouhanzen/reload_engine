@@ -16,12 +16,17 @@ def send_to_socket(message):
 
         # Send a message to the server
         s.send(message.encode())
+        
+        response = s.recv(1024).decode()
+        print(f"Received response: {response}")
 
     except ConnectionRefusedError:
         print("Failed to connect to the server. Make sure the server is running and listening on the correct port.")
     finally:
         # Close the connection
         s.close()
+
+valid_commands = ["go", "back", "left", "right", "frame", "reset"]
 
 def repl():
     """Function to start a REPL that accepts commands."""
@@ -36,12 +41,12 @@ def repl():
             break
 
         # You can add more conditions here to handle different commands like 'go', 'back', etc.
-        elif command in ["go", "back", "left", "right"]:
+        elif command in valid_commands:
             # Send the command to the server
             send_to_socket(command)
             print(f"Sent '{command}' command to the server.")
         else:
-            print("Unknown command. Available commands are: go, back, left, right, stop.")
+            print(f"Unknown command. Available commands are: {valid_commands}.")
 
 if __name__ == "__main__":
     repl()
